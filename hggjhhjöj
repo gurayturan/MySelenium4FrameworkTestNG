@@ -1,0 +1,122 @@
+
+package runners;
+
+
+import commons.BaseTestThreadLocal;
+import io.cucumber.messages.Messages;
+import io.cucumber.testng.*;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
+import io.cucumber.testng.PickleWrapper;
+
+import java.util.List;
+
+
+@CucumberOptions(
+        tags = "@test",
+        plugin = {"pretty",
+                "html:target/cucumber-reports/cucumber.html",
+                "json:target/cucumber-reports/cucumber.json",
+                "io.qameta.allure.cucumber6jvm.AllureCucumber6Jvm"
+        },
+        features = "src/test/java/features",
+        glue = "stepdef"
+)
+public class TestRunnerParallel extends BaseTestThreadLocal {
+    private TestNGCucumberRunner testNGCucumberRunner;
+
+    @BeforeClass(alwaysRun = true)
+    public void setUpClass() {
+        testNGCucumberRunner = new TestNGCucumberRunner(this.getClass());
+    }
+
+    @Test(groups = "cucumber", description = "Run Cucumber Features.", dataProvider = "scenarios")
+    public void scenario(PickleWrapper pickleWrapper, FeatureWrapper featureWrapper) {
+        testNGCucumberRunner.runScenario(pickleWrapper.getPickle());
+    }
+
+    @DataProvider(parallel = true)
+    public Object[][] scenarios() {
+
+        Object[][] scenariosTemp = testNGCucumberRunner.provideScenarios(); //100
+        Object[][] scenarios = new Object[scenariosTemp.length][2];//100
+
+        //count hesaplama kaç tane senaryo var
+        int count = 0;
+        for (int i = 0; i < scenariosTemp.length; i++) {
+            List<String> myList = ((PickleWrapper) scenariosTemp[0][0]).getPickle().getTags();
+
+            if (checkTags("@" + "Static", myList)) {
+
+                scenarios[count][0] = scenariosTemp[i][0];
+                scenarios[count][1] = scenariosTemp[i][1];
+                count++;
+                System.out.println(count + ": count");
+            }
+        }
+
+        Object[][] finalScenarios = new Object[count][2];
+        for (int j = 0; j < count; j++) {
+
+            finalScenarios[j][0] = scenarios[j][0];
+            finalScenarios[j][1] = scenarios[j][1];
+        }
+        return finalScenarios;//20
+    }
+
+    @Test(groups = "cucumber", description = "Run Cucumber Features.", dataProvider = "scenarios2")
+    public void scenario2(PickleWrapper pickleWrapper, FeatureWrapper featureWrapper) {
+        testNGCucumberRunner.runScenario(pickleWrapper.getPickle());
+    }
+
+    @DataProvider(parallel = true)
+    public Object[][] scenarios2() {
+
+        Object[][] scenariosTemp = testNGCucumberRunner.provideScenarios(); //100
+        Object[][] scenarios = new Object[scenariosTemp.length][2];//100
+
+        //count hesaplama kaç tane senaryo var
+        int count1 = 0;
+        for (int i = 0; i < scenariosTemp.length; i++) {
+            List<String> myList = ((PickleWrapper) scenariosTemp[0][0]).getPickle().getTags();
+
+            if (checkTags("@" + "Dynamic", myList)) {
+
+                scenarios[count1][0] = scenariosTemp[i][0];
+                scenarios[count1][1] = scenariosTemp[i][1];
+                count1++;
+                System.out.println(count1 + ": count");
+            }
+        }
+
+        Object[][] finalScenarios = new Object[count1][2];
+        for (int j = 0; j < count1; j++) {
+
+            finalScenarios[j][0] = scenarios[j][0];
+            finalScenarios[j][1] = scenarios[j][1];
+        }
+        return finalScenarios;//20
+    }
+
+    @AfterClass(alwaysRun = true)
+    public void tearDownClass() {
+        testNGCucumberRunner.finish();
+    }
+
+    public List<String> getTags(PickleWrapper o) {
+
+        return o.getPickle().getTags();
+
+    }
+
+    public boolean checkTags(String tagName, List<String> tags) {
+        for (String tag : tags) {
+            if (tag.equalsIgnoreCase(tagName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+}
