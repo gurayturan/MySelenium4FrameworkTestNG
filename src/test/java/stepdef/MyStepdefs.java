@@ -7,6 +7,7 @@ import com.project.Pages.LoginPage;
 import com.project.Pages.SettingsPage;
 import com.project.commons.CommonLib;
 import com.project.commons.MyDriver;
+import com.project.commons.ThreadLocalMyDriver;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.When;
 
